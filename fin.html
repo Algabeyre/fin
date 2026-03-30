@@ -1,0 +1,601 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse | Modern Expense Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .glass-card-light {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+        
+        .category-icon {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .category-icon:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .transaction-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        
+        .transaction-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .progress-bar {
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 50px -10px rgba(59, 130, 246, 0.6);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #3b82f6;
+            background: rgba(255, 255, 255, 0.08);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        .warning-flash {
+            animation: warningPulse 1s ease-in-out infinite alternate;
+        }
+        
+        @keyframes warningPulse {
+            from { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            to { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        
+        .category-select {
+            transition: all 0.2s ease;
+        }
+        
+        .category-select:hover {
+            transform: scale(1.05);
+        }
+        
+        .category-select.active {
+            ring-width: 2px;
+            ring-color: white;
+            transform: scale(1.1);
+        }
+        
+        .amount-display {
+            font-variant-numeric: tabular-nums;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="text-white antialiased">
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8 fade-in">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 gradient-bg rounded-2xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="wallet" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">Pulse</h1>
+                    <p class="text-slate-400 text-sm">Expense Tracker</p>
+                </div>
+            </div>
+            <button onclick="exportToCSV()" class="flex items-center gap-2 px-4 py-2 glass-card-light rounded-xl hover:bg-white/10 transition-all duration-300 text-sm font-medium">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                Export CSV
+            </button>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Total Balance Card -->
+            <div class="glass-card rounded-3xl p-6 lg:col-span-2 fade-in" style="animation-delay: 0.1s">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <p class="text-slate-400 text-sm font-medium mb-1">Total Spent This Month</p>
+                        <h2 class="text-4xl md:text-5xl font-bold amount-display" id="totalSpent">£0.00</h2>
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 text-sm" id="trendIndicator">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                        <span class="text-emerald-400">+12%</span>
+                    </div>
+                </div>
+                
+                <!-- Budget Progress -->
+                <div class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-400">Monthly Budget</span>
+                        <span class="font-medium" id="budgetText">£823,41</span>
+                    </div>
+                    <div class="h-3 bg-white/10 rounded-full overflow-hidden">
+                        <div id="budgetProgress" class="progress-bar h-full gradient-bg rounded-full" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400" id="remainingBudget">£823,41 remaining</span>
+                        <span class="font-medium" id="percentageText">0%</span>
+                    </div>
+                </div>
+
+                <!-- Warning Banner -->
+                <div id="warningBanner" class="hidden mt-4 p-3 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center gap-3 warning-flash">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>
+                    <span class="text-red-200 text-sm font-medium">Budget exceeded! Consider reducing expenses.</span>
+                </div>
+            </div>
+
+            <!-- Quick Add Card -->
+            <div class="glass-card rounded-3xl p-6 fade-in" style="animation-delay: 0.2s">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-blue-400"></i>
+                    Quick Add
+                </h3>
+                
+                <form id="expenseForm" class="space-y-4">
+                    <div>
+                        <label class="text-xs text-slate-400 font-medium mb-1 block">Amount (£)</label>
+                        <input type="number" id="amount" step="0.01" placeholder="0.00" required
+                            class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-slate-500 text-lg font-semibold">
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs text-slate-400 font-medium mb-2 block">Category</label>
+                        <div class="grid grid-cols-4 gap-2" id="categoryGrid">
+                            <!-- Categories injected by JS -->
+                        </div>
+                        <input type="hidden" id="selectedCategory" required>
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs text-slate-400 font-medium mb-1 block">Description</label>
+                        <input type="text" id="description" placeholder="What was this for?" required
+                            class="input-field w-full px-4 py-2 rounded-xl text-white placeholder-slate-500 text-sm">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                        Add Transaction
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="glass-card rounded-3xl p-6 mb-6 fade-in" style="animation-delay: 0.3s">
+            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <i data-lucide="pie-chart" class="w-5 h-5 text-purple-400"></i>
+                Spending by Category
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4" id="categoryBreakdown">
+                <!-- Category cards injected by JS -->
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="glass-card rounded-3xl p-6 fade-in" style="animation-delay: 0.4s">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <i data-lucide="list" class="w-5 h-5 text-emerald-400"></i>
+                    Recent Transactions
+                </h3>
+                <button onclick="clearAll()" class="text-xs text-slate-400 hover:text-red-400 transition-colors">
+                    Clear All
+                </button>
+            </div>
+            
+            <div class="space-y-2" id="transactionsList">
+                <!-- Transactions injected by JS -->
+            </div>
+            
+            <div id="emptyState" class="hidden text-center py-12">
+                <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="receipt" class="w-8 h-8 text-slate-500"></i>
+                </div>
+                <p class="text-slate-400">No transactions yet</p>
+                <p class="text-slate-500 text-sm mt-1">Add your first expense above</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Configuration
+        const MONTHLY_BUDGET = 2000;
+        
+        // EXACT 7 CATEGORIES as requested
+        const categories = {
+            groceries: { name: 'Groceries', color: '#22c55e', icon: 'shopping-cart', bg: 'bg-green-500/20', text: 'text-green-400' },
+            shopping: { name: 'Shopping', color: '#ec4899', icon: 'shopping-bag', bg: 'bg-pink-500/20', text: 'text-pink-400' },
+            health: { name: 'Health', color: '#ef4444', icon: 'heart-pulse', bg: 'bg-red-500/20', text: 'text-red-400' },
+            transport: { name: 'Transport', color: '#3b82f6', icon: 'car', bg: 'bg-blue-500/20', text: 'text-blue-400' },
+            entertainment: { name: 'Entertainment', color: '#a855f7', icon: 'film', bg: 'bg-purple-500/20', text: 'text-purple-400' },
+            telecommunication: { name: 'Telecom', color: '#06b6d4', icon: 'wifi', bg: 'bg-cyan-500/20', text: 'text-cyan-400' },
+            utilities: { name: 'Utilities', color: '#f59e0b', icon: 'zap', bg: 'bg-amber-500/20', text: 'text-amber-400' }
+        };
+
+        // State
+        let transactions = JSON.parse(localStorage.getItem('pulse_transactions')) || [
+            { id: 1, amount: 85.50, category: 'groceries', description: 'Weekly shop at Tesco', date: new Date().toISOString() },
+            { id: 2, amount: 65.00, category: 'utilities', description: 'Electricity bill', date: new Date(Date.now() - 86400000).toISOString() },
+            { id: 3, amount: 45.00, category: 'telecommunication', description: 'Mobile & broadband', date: new Date(Date.now() - 172800000).toISOString() }
+        ];
+
+        // Initialize category grid
+        function initCategoryGrid() {
+            const grid = document.getElementById('categoryGrid');
+            grid.innerHTML = '';
+            
+            Object.entries(categories).forEach(([key, cat]) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `category-select p-2 rounded-xl ${cat.bg} ${cat.text} flex flex-col items-center gap-1`;
+                btn.dataset.category = key;
+                btn.innerHTML = `
+                    <i data-lucide="${cat.icon}" class="w-5 h-5"></i>
+                    <span class="text-xs font-medium">${cat.name}</span>
+                `;
+                btn.onclick = () => selectCategory(key);
+                grid.appendChild(btn);
+            });
+            
+            lucide.createIcons();
+        }
+
+        function selectCategory(key) {
+            document.getElementById('selectedCategory').value = key;
+            document.querySelectorAll('.category-select').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-white', 'scale-110');
+                if (btn.dataset.category === key) {
+                    btn.classList.add('ring-2', 'ring-white', 'scale-110');
+                }
+            });
+        }
+
+        // Format currency with GBP
+        function formatMoney(amount) {
+            return '£' + amount.toFixed(2);
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 86400000) return 'Today';
+            if (diff < 172800000) return 'Yesterday';
+            return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+            const percentage = Math.min((total / MONTHLY_BUDGET) * 100, 100);
+            const remaining = Math.max(MONTHLY_BUDGET - total, 0);
+            
+            // Update total with animation
+            animateValue('totalSpent', total);
+            
+            // Update budget progress
+            const progressBar = document.getElementById('budgetProgress');
+            progressBar.style.width = percentage + '%';
+            
+            // Color code progress bar
+            if (percentage > 90) {
+                progressBar.className = 'progress-bar h-full bg-red-500 rounded-full';
+            } else if (percentage > 75) {
+                progressBar.className = 'progress-bar h-full bg-amber-500 rounded-full';
+            } else {
+                progressBar.className = 'progress-bar h-full gradient-bg rounded-full';
+            }
+            
+            document.getElementById('percentageText').textContent = Math.round((total / MONTHLY_BUDGET) * 100) + '%';
+            document.getElementById('remainingBudget').textContent = remaining > 0 
+                ? `${formatMoney(remaining)} remaining` 
+                : `${formatMoney(Math.abs(remaining))} over budget`;
+            document.getElementById('remainingBudget').className = remaining < 0 ? 'text-red-400 font-medium' : 'text-slate-400';
+            
+            // Show warning if over budget
+            const warningBanner = document.getElementById('warningBanner');
+            if (total > MONTHLY_BUDGET) {
+                warningBanner.classList.remove('hidden');
+            } else {
+                warningBanner.classList.add('hidden');
+            }
+            
+            // Update category breakdown
+            updateCategoryBreakdown();
+            
+            // Update transactions list
+            updateTransactionsList();
+            
+            // Save to localStorage
+            localStorage.setItem('pulse_transactions', JSON.stringify(transactions));
+        }
+
+        function animateValue(elementId, endValue) {
+            const element = document.getElementById(elementId);
+            const startValue = parseFloat(element.textContent.replace('£', '')) || 0;
+            const duration = 500;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const current = startValue + (endValue - startValue) * easeProgress;
+                
+                element.textContent = formatMoney(current);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+
+        function updateCategoryBreakdown() {
+            const breakdown = {};
+            Object.keys(categories).forEach(key => breakdown[key] = 0);
+            transactions.forEach(t => {
+                if (breakdown[t.category] !== undefined) {
+                    breakdown[t.category] += t.amount;
+                }
+            });
+            
+            const container = document.getElementById('categoryBreakdown');
+            container.innerHTML = '';
+            
+            Object.entries(breakdown).forEach(([key, amount]) => {
+                const cat = categories[key];
+                const percentage = transactions.length > 0 ? (amount / transactions.reduce((s, t) => s + t.amount, 0) * 100).toFixed(0) : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'glass-card-light rounded-2xl p-4 hover:bg-white/10 transition-all duration-300 cursor-pointer';
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 ${cat.bg} rounded-xl flex items-center justify-center category-icon">
+                            <i data-lucide="${cat.icon}" class="w-5 h-5 ${cat.text}"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">${cat.name}</p>
+                            <p class="font-semibold amount-display text-sm">${formatMoney(amount)}</p>
+                        </div>
+                    </div>
+                    <div class="w-full bg-white/10 rounded-full h-1.5">
+                        <div class="h-full rounded-full ${cat.text.replace('text', 'bg')}" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            lucide.createIcons();
+        }
+
+        function updateTransactionsList() {
+            const list = document.getElementById('transactionsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (transactions.length === 0) {
+                list.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            list.innerHTML = '';
+            
+            // Sort by date descending
+            const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sorted.forEach((t, index) => {
+                const cat = categories[t.category];
+                const item = document.createElement('div');
+                item.className = 'transaction-item flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 cursor-pointer';
+                item.style.animationDelay = `${index * 0.05}s`;
+                item.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 ${cat.bg} rounded-xl flex items-center justify-center category-icon">
+                            <i data-lucide="${cat.icon}" class="w-6 h-6 ${cat.text}"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">${t.description}</p>
+                            <p class="text-xs text-slate-400">${cat.name} • ${formatDate(t.date)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-semibold text-lg amount-display">${formatMoney(t.amount)}</span>
+                        <button onclick="deleteTransaction(${t.id})" class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group">
+                            <i data-lucide="trash-2" class="w-4 h-4 text-slate-400 group-hover:text-red-400"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+            
+            lucide.createIcons();
+        }
+
+        // Add transaction
+        document.getElementById('expenseForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('selectedCategory').value;
+            const description = document.getElementById('description').value;
+            
+            if (!category) {
+                alert('Please select a category');
+                return;
+            }
+            
+            const transaction = {
+                id: Date.now(),
+                amount,
+                category,
+                description,
+                date: new Date().toISOString()
+            };
+            
+            transactions.push(transaction);
+            
+            // Reset form
+            document.getElementById('amount').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('selectedCategory').value = '';
+            document.querySelectorAll('.category-select').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-white', 'scale-110');
+            });
+            
+            updateDashboard();
+        });
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            updateDashboard();
+        }
+
+        function clearAll() {
+            if (confirm('Clear all transactions?')) {
+                transactions = [];
+                updateDashboard();
+            }
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if (transactions.length === 0) {
+                alert('No transactions to export');
+                return;
+            }
+            
+            const headers = ['Date', 'Category', 'Description', 'Amount'];
+            const rows = transactions.map(t => [
+                new Date(t.date).toLocaleDateString('en-GB'),
+                categories[t.category].name,
+                t.description,
+                t.amount.toFixed(2)
+            ]);
+            
+            const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pulse_expenses_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        initCategoryGrid();
+        updateDashboard();
+    </script>
+</body>
+</html>
+
+
